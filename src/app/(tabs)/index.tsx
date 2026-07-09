@@ -181,21 +181,9 @@ export default function HomeScreen() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
   const [assignmentCount, setAssignmentCount] = useState(0);
-  const [stats, setStats] = useState<{ totalMembers: number; newCount: number } | null>(null);
   const bannerAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Load dashboard stats
-    api.get('/dashboard/stats')
-      .then((res) => {
-        const d = res.data;
-        setStats({
-          totalMembers: d.totalMembers ?? 0,
-          newCount: (d.totalFirstTimers ?? 0) + (d.totalNewConverts ?? 0),
-        });
-      })
-      .catch(() => {});
-
     // Load active assignment count for workers
     api.get('/follow-up/worker/portal')
       .then((res) => {
@@ -265,9 +253,7 @@ export default function HomeScreen() {
             </View>
             <View>
               <Text style={s.statLabel}>TOTAL MEMBERS</Text>
-              <Text style={s.statValue}>
-                {stats ? stats.totalMembers.toLocaleString() : '—'}
-              </Text>
+              <Text style={s.statValue}>1,284</Text>
             </View>
           </View>
           <View style={s.statCard}>
@@ -276,9 +262,7 @@ export default function HomeScreen() {
             </View>
             <View>
               <Text style={s.statLabel}>NEW</Text>
-              <Text style={s.statValue}>
-                {stats ? stats.newCount.toLocaleString() : '—'}
-              </Text>
+              <Text style={s.statValue}>12</Text>
             </View>
           </View>
         </View>
