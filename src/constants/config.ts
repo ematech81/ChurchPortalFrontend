@@ -1,6 +1,5 @@
-// ─── Change this IP whenever your machine's network address changes ───────────
-const DEV_IP = '10.143.112.155';
+const PROD_API = 'https://churchportalbackend-production.up.railway.app/v1';
 
 export const API_BASE_URL = __DEV__
-  ? `http://${DEV_IP}:3000/v1`
-  : (process.env.EXPO_PUBLIC_API_URL ?? 'https://your-production-api.com/v1');
+  ? (process.env.EXPO_PUBLIC_API_URL ?? PROD_API)
+  : PROD_API;
