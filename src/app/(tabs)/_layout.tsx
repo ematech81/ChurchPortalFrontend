@@ -84,9 +84,6 @@ export default function TabsLayout() {
       <Tabs.Screen name="reports" />
       <Tabs.Screen name="zones" />
       <Tabs.Screen name="profile" />
-      <Tabs.Screen name="members" options={{ href: null }} />
-      <Tabs.Screen name="follow-up" options={{ href: null }} />
-      <Tabs.Screen name="attendance" options={{ href: null }} />
     </Tabs>
   );
 }

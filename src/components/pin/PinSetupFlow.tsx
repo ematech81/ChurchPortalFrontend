@@ -105,7 +105,7 @@ export default function PinSetupFlow({ onDone }: Props) {
 
       <View style={s.stepDots}>
         <View style={[s.dot, step === 'enter' ? s.dotActive : s.dotDone]} />
-        <View style={[s.dot, step === 'confirm' ? s.dotActive : step === 'success' ? s.dotDone : s.dotIdle]} />
+        <View style={[s.dot, step === 'confirm' ? s.dotActive : s.dotIdle]} />
       </View>
     </View>
   );

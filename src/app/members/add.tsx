@@ -362,6 +362,7 @@ export default function AddMemberScreen() {
   const [emergencyPhone, setEmergencyPhone] = useState('');
 
   // Church Details
+  const [joinDateMode, setJoinDateMode] = useState<'unknown' | 'known'>('unknown');
   const [dateJoined, setDateJoined] = useState<Date | null>(null);
   const [memberStatus, setMemberStatus] = useState('');
   const [baptismStatus, setBaptismStatus] = useState('');
@@ -611,13 +612,55 @@ export default function AddMemberScreen() {
         <View style={s.card}>
           <SectionHeader icon="business-outline" title="CHURCH DETAILS" />
 
-          <DatePickerField
-            label="Date Joined Church (Optional)"
-            value={dateJoined}
-            onChange={setDateJoined}
-            placeholder="Tap to select date"
-            maxDate={today}
-          />
+          <View style={s.field}>
+            <Text style={s.label}>Date Joined Church</Text>
+            <View style={s.joinDateToggle}>
+              <TouchableOpacity
+                style={[s.joinDateBtn, joinDateMode === 'unknown' && s.joinDateBtnActive]}
+                onPress={() => { setJoinDateMode('unknown'); setDateJoined(null); }}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name="time-outline"
+                  size={14}
+                  color={joinDateMode === 'unknown' ? C.dark : C.textGray}
+                />
+                <Text style={[s.joinDateBtnText, joinDateMode === 'unknown' && s.joinDateBtnTextActive]}>
+                  Old Member
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.joinDateBtn, joinDateMode === 'known' && s.joinDateBtnActive]}
+                onPress={() => setJoinDateMode('known')}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name="calendar-outline"
+                  size={14}
+                  color={joinDateMode === 'known' ? C.dark : C.textGray}
+                />
+                <Text style={[s.joinDateBtnText, joinDateMode === 'known' && s.joinDateBtnTextActive]}>
+                  I Know the Date
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {joinDateMode === 'unknown' && (
+              <View style={s.joinDateHint}>
+                <Ionicons name="information-circle-outline" size={13} color={C.textGray} />
+                <Text style={s.joinDateHintText}>Date will be marked as unknown for this member.</Text>
+              </View>
+            )}
+          </View>
+
+          {joinDateMode === 'known' && (
+            <DatePickerField
+              label="Select Join Date"
+              value={dateJoined}
+              onChange={setDateJoined}
+              placeholder="Tap to select date"
+              maxDate={today}
+            />
+          )}
 
           <Field label="Membership Status" required>
             <PickerBtn value={memberStatus} placeholder="Select status" onPress={() => openPicker('Membership Status', MEMBER_STATUSES, memberStatus, setMemberStatus)} />
@@ -841,6 +884,15 @@ const s = StyleSheet.create({
   sheetItemActive: { backgroundColor: C.accentFaint, marginHorizontal: -20, paddingHorizontal: 20 },
   sheetItemText: { fontSize: 15, color: C.textDark },
   sheetItemTextActive: { fontWeight: '700', color: C.accent },
+
+  // Join date toggle
+  joinDateToggle: { flexDirection: 'row', gap: 10, marginBottom: 8 },
+  joinDateBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 11, borderRadius: 10, borderWidth: 1.5, borderColor: C.border, backgroundColor: C.bg },
+  joinDateBtnActive: { backgroundColor: C.accent, borderColor: C.accent },
+  joinDateBtnText: { fontSize: 13, fontWeight: '600', color: C.textGray },
+  joinDateBtnTextActive: { color: C.dark, fontWeight: '800' },
+  joinDateHint: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
+  joinDateHintText: { fontSize: 11, color: C.textGray, flex: 1 },
 
   // iOS date picker sheet
   iosPickerSheet: { backgroundColor: C.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: 40 },

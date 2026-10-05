@@ -16,8 +16,8 @@ const RESEND_COOLDOWN = 60;
 
 export default function VerifyScreen() {
   const router = useRouter();
-  const { email, phone, mode, devCode } = useLocalSearchParams<{
-    email?: string; phone?: string; mode?: string; devCode?: string;
+  const { email, phone, mode, devCode, delivery } = useLocalSearchParams<{
+    email?: string; phone?: string; mode?: string; devCode?: string; delivery?: string;
   }>();
   const setAuth = useAuthStore((s) => s.setAuth);
   const setOnboardingDone = useAuthStore((s) => s.setOnboardingDone);
@@ -160,10 +160,12 @@ export default function VerifyScreen() {
             </View>
           )}
 
-          <Text style={s.title}>{isPastor ? 'Check Your Phone' : 'Check Your Email'}</Text>
+          <Text style={s.title}>{isPastor && delivery !== 'email' ? 'Check Your Phone' : 'Check Your Email'}</Text>
           <Text style={s.subtitle}>
             {isPastor
-              ? "We've sent a 6-digit code to your phone number"
+              ? (delivery === 'email'
+                  ? "We've sent a 6-digit code to the email address on file for this number"
+                  : "We've sent a 6-digit code to your phone number")
               : "We've sent a 6-digit verification code to"}
           </Text>
           <Text style={s.identifierText}>{identifier}</Text>

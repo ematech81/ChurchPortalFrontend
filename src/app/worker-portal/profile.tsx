@@ -1,6 +1,6 @@
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  Alert, ActivityIndicator, Clipboard, StatusBar,
+  Alert, ActivityIndicator, StatusBar,
 } from 'react-native';
 import { useState, useCallback } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';

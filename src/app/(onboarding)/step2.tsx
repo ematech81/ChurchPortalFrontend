@@ -356,7 +356,7 @@ export default function Step2Screen() {
       >
         {/* Badge + Heading */}
         <View style={s.badgeRow}>
-          <View style={s.badge}><Text style={s.badgeText}>Step 2 of 2</Text></View>
+          <View style={s.badge}><Text style={s.badgeText}>Step 2 of 3</Text></View>
           <Text style={s.badgeSub}>  ONBOARDING</Text>
         </View>
         <Text style={s.heading}>Configure Your{'\n'}Services</Text>

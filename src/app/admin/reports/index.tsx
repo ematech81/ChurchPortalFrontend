@@ -7,6 +7,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../../../services/api';
+import { useAuthStore } from '../../../stores/auth.store';
 import { C } from '../../../constants/theme';
 
 interface ReportData {
@@ -46,23 +47,26 @@ export default function ReportsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  const role = useAuthStore((st) => st.user?.role);
+  const scope = role === 'senior_pastor' ? 'all' : undefined; // Senior Pastor sees every branch
+
   const fetchAll = useCallback(async () => {
     try {
       const [membersTotal, workers, newConverts, firstTimers, ministers, events, dashStats, followStats, monthFinance, todayFinance, branches] = await Promise.all([
-        api.get('/members/count'),
-        api.get('/members/count', { params: { status: 'worker' } }),
-        api.get('/members/count', { params: { status: 'new_convert' } }),
-        api.get('/members/count', { params: { status: 'first_timer' } }),
-        api.get('/members/count', { params: { status: 'minister' } }),
+        api.get('/members/count', { params: { scope } }),
+        api.get('/members/count', { params: { status: 'worker', scope } }),
+        api.get('/members/count', { params: { status: 'new_convert', scope } }),
+        api.get('/members/count', { params: { status: 'first_timer', scope } }),
+        api.get('/members/count', { params: { status: 'minister', scope } }),
         api.get('/attendance/events'),
         api.get('/dashboard/stats'),
         api.get('/follow-up/stats'),
         api.get('/giving/summary/month'),
         api.get('/giving/summary/today'),
         api.get('/churches/branches'),
-      ]);
+      ].map((p) => p.catch(() => ({ data: null }))));
 
-      const evList = events.data as Array<{ attendanceCount: number }>;
+      const evList = (events.data ?? []) as Array<{ attendanceCount: number }>;
       const avgCount = evList.length ? Math.round(evList.reduce((s, e) => s + e.attendanceCount, 0) / evList.length) : 0;
       const lastCount = evList[0]?.attendanceCount ?? 0;
 

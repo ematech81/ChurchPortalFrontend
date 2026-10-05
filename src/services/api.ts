@@ -1,16 +1,10 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import { router } from 'expo-router';
 import { API_BASE_URL } from '../constants/config';
+import { useAuthStore } from '../stores/auth.store';
 
-function decodeJwtPayload(token: string): { sub?: string } | null {
-  try {
-    return JSON.parse(atob(token.split('.')[1]));
-  } catch {
-    return null;
-  }
-}
-
-export const api = axios.create({ baseURL: API_BASE_URL });
+export const api = axios.create({ baseURL: API_BASE_URL, timeout: 20000 });
 
 api.interceptors.request.use(async (config) => {
   const token = await SecureStore.getItemAsync('accessToken');
@@ -18,35 +12,57 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+// The server rotates the refresh token on every refresh, so two refreshes racing each other would
+// invalidate one another and log the user out. All 401s that arrive together share ONE refresh.
+let refreshInFlight: Promise<string | null> | null = null;
+
+async function refreshSession(): Promise<string | null> {
+  const storedRefresh = await SecureStore.getItemAsync('refreshToken');
+  if (!storedRefresh) return null;
+  try {
+    const res = await axios.post(
+      `${API_BASE_URL}/auth/refresh`,
+      { refreshToken: storedRefresh },
+      { timeout: 15000 },
+    );
+    const { accessToken, refreshToken } = res.data;
+    await SecureStore.setItemAsync('accessToken', accessToken);
+    await SecureStore.setItemAsync('refreshToken', refreshToken);
+    useAuthStore.setState({ accessToken });
+    return accessToken;
+  } catch (err: any) {
+    const status = err?.response?.status;
+    // Only a definite rejection ends the session. A flaky network must not log people out.
+    if (status === 401 || status === 403) return null;
+    throw err;
+  }
+}
+
+async function endSession() {
+  await useAuthStore.getState().logout();
+  router.replace('/(auth)/login' as any);
+}
+
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const config = error.config as any;
-    if (error.response?.status === 401 && !config._retry) {
+    const isAuthCall = typeof config?.url === 'string' && config.url.startsWith('/auth/');
+
+    if (error.response?.status === 401 && config && !config._retry && !isAuthCall) {
       config._retry = true;
-      const storedRefresh = await SecureStore.getItemAsync('refreshToken');
-      const storedAccess  = await SecureStore.getItemAsync('accessToken');
-      if (storedRefresh && storedAccess) {
-        const payload = decodeJwtPayload(storedAccess);
-        if (payload?.sub) {
-          try {
-            const res = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-              userId: payload.sub,
-              refreshToken: storedRefresh,
-            });
-            const { accessToken: newAccess, refreshToken: newRefresh } = res.data;
-            await SecureStore.setItemAsync('accessToken', newAccess);
-            await SecureStore.setItemAsync('refreshToken', newRefresh);
-            config.headers = config.headers ?? {};
-            config.headers.Authorization = `Bearer ${newAccess}`;
-            return api(config);
-          } catch {
-            // refresh failed — fall through to clear tokens
-          }
+      try {
+        refreshInFlight ??= refreshSession().finally(() => { refreshInFlight = null; });
+        const newAccess = await refreshInFlight;
+        if (newAccess) {
+          config.headers = config.headers ?? {};
+          config.headers.Authorization = `Bearer ${newAccess}`;
+          return api(config);
         }
+        await endSession();
+      } catch {
+        // Network trouble while refreshing: surface the original error, keep the session.
       }
-      await SecureStore.deleteItemAsync('accessToken');
-      await SecureStore.deleteItemAsync('refreshToken');
     }
     return Promise.reject(error);
   },

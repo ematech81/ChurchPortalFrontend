@@ -206,8 +206,12 @@ export default function FollowUpScreen() {
     Alert.alert('Complete Journey', `Mark ${j.member?.firstName}'s journey as complete?`, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Complete', onPress: async () => {
-        await api.patch(`/follow-up/journeys/${j.id}/status`, { status: 'completed' });
-        await fetchAll();
+        try {
+          await api.patch(`/follow-up/journeys/${j.id}/status`, { status: 'completed' });
+          await fetchAll();
+        } catch (e: any) {
+          Alert.alert('Error', e?.response?.data?.message ?? 'Could not update the journey.');
+        }
       }},
     ]);
   };
@@ -216,8 +220,12 @@ export default function FollowUpScreen() {
     Alert.alert('Abandon Journey', 'This will stop the follow-up sequence. Continue?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Abandon', style: 'destructive', onPress: async () => {
-        await api.patch(`/follow-up/journeys/${j.id}/status`, { status: 'abandoned' });
-        await fetchAll();
+        try {
+          await api.patch(`/follow-up/journeys/${j.id}/status`, { status: 'abandoned' });
+          await fetchAll();
+        } catch (e: any) {
+          Alert.alert('Error', e?.response?.data?.message ?? 'Could not update the journey.');
+        }
       }},
     ]);
   };
@@ -304,7 +312,7 @@ export default function FollowUpScreen() {
           )}
         </ScrollView>
       ) : (
-        <FlatList
+        <FlatList<QueueMember | Journey>
           data={tab === 'tasks' ? queue : journeys}
           keyExtractor={(item) => item.id}
           style={{ flex: 1, backgroundColor: C.bg }}

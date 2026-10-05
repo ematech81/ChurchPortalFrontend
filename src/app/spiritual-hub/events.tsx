@@ -207,14 +207,16 @@ function CreateEventTab() {
     setSaving(true);
     try {
       await api.post('/service-events', {
-        name: title.trim(),
-        eventType,
-        time,
-        endTime: null,
-        location: location.trim() || null,
-        format: locationMode,
-        kind: 'custom',
-        eventDate: date.trim() || null,
+        services: [{
+          name: title.trim(),
+          eventType,
+          time,
+          endTime: null,
+          location: location.trim() || null,
+          format: locationMode,
+          kind: 'custom',
+          eventDate: date.trim() || null,
+        }],
       });
       Alert.alert('Published!', `"${title}" has been created.`);
       setTitle(''); setDescription(''); setDate(''); setTime(''); setLocation('');

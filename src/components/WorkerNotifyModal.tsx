@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import {
   Modal, View, Text, TouchableOpacity, ScrollView,
-  StyleSheet, Linking, Clipboard, ActivityIndicator, Alert,
+  StyleSheet, Linking, ActivityIndicator, Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 
 const C = {
   dark: '#120D2E', darkCard: '#1E1650', accent: '#F5C518',
@@ -48,7 +49,7 @@ export default function WorkerNotifyModal({
 
   const copyCode = () => {
     if (!worker.loginCode) return;
-    Clipboard.setString(worker.loginCode);
+    Clipboard.setStringAsync(worker.loginCode);
     setCodeCopied(true);
     setTimeout(() => setCodeCopied(false), 2500);
   };

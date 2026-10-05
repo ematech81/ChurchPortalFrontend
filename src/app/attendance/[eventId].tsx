@@ -71,13 +71,13 @@ function MemberRow({ member, recordId, onToggle, toggling }: {
         activeOpacity={0.8}
       >
         {toggling ? (
-          <ActivityIndicator size="small" color={checked ? C.dark : C.dark} />
+          <ActivityIndicator size="small" color={checked ? C.white : C.dark} />
         ) : (
           <>
             <Ionicons
               name={checked ? 'checkmark-circle' : 'ellipse-outline'}
               size={16}
-              color={checked ? C.dark : C.dark}
+              color={checked ? C.white : C.dark}
             />
             <Text style={[r.toggleText, checked && r.toggleTextChecked]}>
               {checked ? 'Checked' : 'Check-in'}

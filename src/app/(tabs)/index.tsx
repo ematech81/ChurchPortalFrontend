@@ -51,12 +51,6 @@ const GRID_CLUSTERS = [
   { icon: 'settings',    title: 'Administration',        sub: 'Dashboard, Branches, Roles',    route: '/admin',         pastorOnly: true  },
 ];
 
-const ACTIVITY = [
-  { icon: 'play-circle',   title: 'Sermon: Faith for the New Year', sub: 'Accessed 2 hours ago',    iconBg: C.accent,   iconColor: C.dark  },
-  { icon: 'person-circle', title: 'Member: John Doe',               sub: 'Profile edited yesterday', iconBg: C.darkCard, iconColor: C.white },
-  { icon: 'document-text', title: 'Report: Monthly Cell Growth',    sub: 'Generated 3 days ago',    iconBg: C.accent,   iconColor: C.dark  },
-] as const;
-
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
 function Sidebar({ visible, onClose, clusters, onNavigate, user }: {
@@ -181,6 +175,7 @@ export default function HomeScreen() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
   const [assignmentCount, setAssignmentCount] = useState(0);
+  const [stats, setStats] = useState<{ totalMembers: number; totalNewConverts: number } | null>(null);
   const bannerAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -195,6 +190,13 @@ export default function HomeScreen() {
       })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!userIsPastor) return;
+    api.get('/dashboard/stats')
+      .then((res) => setStats(res.data))
+      .catch(() => setStats(null)); // show a dash rather than a wrong number
+  }, [userIsPastor]);
 
   useEffect(() => {
     if (userIsPastor && user?.hasPin === false && !getPinSetupSkipped()) {
@@ -253,7 +255,7 @@ export default function HomeScreen() {
             </View>
             <View>
               <Text style={s.statLabel}>TOTAL MEMBERS</Text>
-              <Text style={s.statValue}>1,284</Text>
+              <Text style={s.statValue}>{stats ? stats.totalMembers.toLocaleString() : '—'}</Text>
             </View>
           </View>
           <View style={s.statCard}>
@@ -261,8 +263,8 @@ export default function HomeScreen() {
               <Ionicons name="person-add" size={22} color={C.accent} />
             </View>
             <View>
-              <Text style={s.statLabel}>NEW</Text>
-              <Text style={s.statValue}>12</Text>
+              <Text style={s.statLabel}>NEW CONVERTS</Text>
+              <Text style={s.statValue}>{stats ? stats.totalNewConverts.toLocaleString() : '—'}</Text>
             </View>
           </View>
         </View>
@@ -311,23 +313,6 @@ export default function HomeScreen() {
               </TouchableOpacity>
             ))}
           </View>
-        </View>
-
-        {/* Recent Activity */}
-        <View style={s.section}>
-          <Text style={s.sectionTitle}>Recent Activity</Text>
-          {ACTIVITY.map((item) => (
-            <TouchableOpacity key={item.title} style={s.activityRow} activeOpacity={0.75}>
-              <View style={[s.activityIcon, { backgroundColor: item.iconBg }]}>
-                <Ionicons name={item.icon as any} size={20} color={item.iconColor} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={s.activityTitle}>{item.title}</Text>
-                <Text style={s.activitySub}>{item.sub}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={C.textGray} />
-            </TouchableOpacity>
-          ))}
         </View>
       </ScrollView>
 

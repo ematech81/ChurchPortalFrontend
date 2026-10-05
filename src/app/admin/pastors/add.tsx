@@ -234,15 +234,28 @@ export default function AddPastorScreen() {
     try {
       const payload = buildPayload();
 
+      let memberId: string;
       if (mode === 'existing' && selectedMember) {
         await api.patch(`/members/${selectedMember.id}`, payload);
+        memberId = selectedMember.id;
       } else {
-        await api.post('/members', payload);
+        const created = await api.post('/members', payload);
+        memberId = created.data.id;
       }
 
-      // Assign to branch if selected
-      if (branchId && mode === 'existing' && selectedMember) {
-        await api.patch(`/churches/pastors/${selectedMember.id}/assign`, { branchId }).catch(() => {});
+      // Assign to a branch: promote the member to a Branch Pastor login for that branch.
+      // (Errors are shown — the member is saved either way, but the pastor must know if assignment failed.)
+      if (branchId) {
+        try {
+          await api.post('/churches/pastors/promote-member', { memberId, branchId });
+        } catch (e: any) {
+          Alert.alert(
+            'Saved, but not assigned',
+            e?.response?.data?.message ?? 'The pastor was saved but could not be assigned to the branch.',
+          );
+          setSaving(false);
+          return;
+        }
       }
 
       Alert.alert(

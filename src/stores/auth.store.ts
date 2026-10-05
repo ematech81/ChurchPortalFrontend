@@ -128,19 +128,20 @@ export const useAuthStore = create<AuthStore>((set) => ({
       // Try to refresh using the stored refresh token
       if (refreshToken && payload.sub) {
         try {
-          const res = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-            userId: payload.sub,
-            refreshToken,
-          });
+          const res = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken }, { timeout: 15000 });
           const { accessToken: newAccess, refreshToken: newRefresh } = res.data;
           await SecureStore.setItemAsync('accessToken', newAccess);
           await SecureStore.setItemAsync('refreshToken', newRefresh);
           activeToken = newAccess;
-        } catch {
-          // Refresh failed → clear everything and go to login
-          await clearStoredAuth();
-          set({ isReady: true });
-          return;
+        } catch (err: any) {
+          const status = err?.response?.status;
+          if (status === 401 || status === 403) {
+            // Server rejected the refresh token → the session is over
+            await clearStoredAuth();
+            set({ isReady: true });
+            return;
+          }
+          // Offline / server unreachable: keep the session; the first API call will refresh it.
         }
       } else {
         // No refresh token → clear and go to login

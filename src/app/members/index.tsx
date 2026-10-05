@@ -243,6 +243,7 @@ export default function MembersScreen() {
   const fetchMembers = useCallback(async (q = search, filter = activeFilter) => {
     try {
       const params: Record<string, string> = {};
+      if (viewerRole === 'senior_pastor') params.scope = 'all'; // whole organisation, all branches
       if (q) params.search = q;
       if (filter !== 'all') params.status = filter;
       const res = await api.get('/members', { params });
@@ -257,7 +258,7 @@ export default function MembersScreen() {
 
   const fetchCount = useCallback(async () => {
     try {
-      const res = await api.get('/members/count');
+      const res = await api.get('/members/count', { params: viewerRole === 'senior_pastor' ? { scope: 'all' } : undefined });
       setTotal(typeof res.data === 'number' ? res.data : res.data?.count ?? 0);
     } catch {}
   }, []);

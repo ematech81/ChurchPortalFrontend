@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const C = { dark: '#120D2E', accent: '#F5C518', white: '#FFFFFF', gray: '#8888A0' };
@@ -20,19 +20,20 @@ export default function WorkerPortalLayout() {
             const label = (options.tabBarLabel ?? route.name) as string;
 
             return (
-              <View key={route.key} style={tb.tabItem}>
+              <TouchableOpacity
+                key={route.key}
+                style={tb.tabItem}
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate(route.name)}
+              >
                 <View style={[tb.tabInner, focused && tb.tabInnerActive]}>
                   {icon}
                   <Text style={[tb.tabLabel, focused && tb.tabLabelActive]}>{label}</Text>
                 </View>
-              </View>
+              </TouchableOpacity>
             );
           })}
 
-          {/* FAB */}
-          <View style={[tb.fab, { bottom: insets.bottom + 16 }]}>
-            <Ionicons name="add" size={26} color={C.dark} />
-          </View>
         </View>
       )}
     >

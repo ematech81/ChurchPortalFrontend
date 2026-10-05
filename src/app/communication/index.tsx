@@ -70,32 +70,26 @@ export default function CommunicationScreen() {
         { text: 'Send', onPress: async () => {
           setSending(true);
           try {
-            // Fetch recipients
-            const params: any = { limit: 500, ...ao?.filter };
+            // Recipients come from the audience filter (the server caps one send at 100 people).
+            const params: any = { limit: 100, ...ao?.filter };
             const res = await api.get('/members', { params });
-            const members: Array<{ phone: string; id: string }> = res.data;
+            const members: Array<{ id: string }> = res.data;
 
             if (members.length === 0) { Alert.alert('No recipients', 'No members match this audience.'); return; }
 
-            if (channel === 'whatsapp') {
-              // For dev: open WhatsApp with the first recipient as demo
-              // In production, Termii sends bulk
-              const phone = members[0]?.phone?.replace(/\D/g, '');
-              const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-              await Linking.openURL(url);
-              Alert.alert('WhatsApp Opened', `Bulk sending to ${members.length} members would use Termii in production.`);
-            } else {
-              // Try backend SMS endpoint
-              await api.post('/messaging/send-bulk', {
-                memberIds: members.map((m) => m.id),
-                channel,
-                body: message,
-              });
-              Alert.alert('Sent', `Message sent to ${members.length} members.`);
-            }
+            const out = await api.post('/messaging/send-bulk', {
+              memberIds: members.map((m) => m.id),
+              channel,
+              body: message,
+            });
+            const { sent, failed, skipped } = out.data;
+            Alert.alert(
+              failed ? 'Partly sent' : 'Sent',
+              `Delivered to ${sent}. Skipped ${skipped} (no phone or opted out). Failed ${failed}.`,
+            );
             setMessage('');
-          } catch {
-            Alert.alert('Info', 'SMS gateway requires Termii credentials. Configure in .env to enable bulk sending.');
+          } catch (e: any) {
+            Alert.alert('Could not send', e?.response?.data?.message ?? 'The message could not be sent. Please try again.');
           } finally { setSending(false); }
         }},
       ],

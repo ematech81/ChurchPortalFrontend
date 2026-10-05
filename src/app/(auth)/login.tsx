@@ -161,7 +161,7 @@ function BranchPastorLoginForm() {
       const devCode = res.data?.devCode;
       router.push({
         pathname: '/(auth)/verify',
-        params: { phone: trimmed, mode: 'pastor', ...(devCode ? { devCode } : {}) },
+        params: { phone: trimmed, mode: 'pastor', delivery: res.data?.delivery ?? 'sms', ...(devCode ? { devCode } : {}) },
       } as any);
     } catch (err: any) {
       const data = err.response?.data;

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "ChurchSaaS",
-    "slug": "church-saas",
+    "name": "Kingdom Portal",
+    "slug": "kingdom-portal",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -35,14 +35,21 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/notification-icon.png",
-          "color": "#1d4ed8"
+          "icon": "./assets/notification.png",
+          "color": "#120D2E"
         }
       ],
       "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c023aaba-ced5-4dcf-8e71-6fe9d0cfce3e"
+      }
+    },
+    "owner": "ematech81"
   }
 }

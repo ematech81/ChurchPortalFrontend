@@ -106,11 +106,21 @@ export default function Step1Screen() {
         address: address || undefined,
         phone: phone || undefined,
         email: email || undefined,
-        logoUrl: logo || undefined,
       });
       // Server returns fresh tokens with churchId now in JWT payload
       const { church, accessToken, refreshToken, user } = res.data;
       await updateTokens(user, accessToken, refreshToken);
+
+      // The logo is picked from the phone, so it must be uploaded as a file (the server then stores its URL).
+      if (logo && logo.startsWith('file:')) {
+        try {
+          const form = new FormData();
+          form.append('logo', { uri: logo, name: 'logo.jpg', type: 'image/jpeg' } as any);
+          await api.post('/churches/me/logo', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+        } catch {
+          // Not fatal: the church exists; the logo can be added again later from settings.
+        }
+      }
       router.push('/(onboarding)/step2');
     } catch (err: any) {
       const msg = err.response?.data?.message;
