@@ -181,11 +181,12 @@ export default function PinForgotModal({ visible, onClose }: Props) {
                 style={s.input}
                 value={credential}
                 onChangeText={setCredential}
-                placeholder={isBranchPastor ? 'Enter OTP code' : 'Enter password'}
+                placeholder={isBranchPastor ? 'Enter the code we sent you' : 'Enter password'}
                 placeholderTextColor={C.gray}
                 secureTextEntry={!isBranchPastor && !showCredential}
-                keyboardType={isBranchPastor ? 'number-pad' : 'default'}
-                autoCapitalize="none"
+                keyboardType="default"
+                autoCapitalize={isBranchPastor ? 'characters' : 'none'}
+                autoCorrect={false}
               />
               {!isBranchPastor && (
                 <TouchableOpacity onPress={() => setShowCredential((v) => !v)} style={s.eyeBtn}>

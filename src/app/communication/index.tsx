@@ -38,7 +38,7 @@ export default function CommunicationScreen() {
   const router = useRouter();
   const [tab, setTab] = useState<'compose' | 'history'>('compose');
   const [audience, setAudience] = useState('all');
-  const [channel, setChannel] = useState<'whatsapp' | 'sms'>('whatsapp');
+  const [channel, setChannel] = useState<string>('sms') // SMS only for now (BulkSMS Nigeria has no WhatsApp channel);
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [logs, setLogs] = useState<MessageLog[]>([]);
@@ -79,7 +79,6 @@ export default function CommunicationScreen() {
 
             const out = await api.post('/messaging/send-bulk', {
               memberIds: members.map((m) => m.id),
-              channel,
               body: message,
             });
             const { sent, failed, skipped } = out.data;
@@ -106,7 +105,7 @@ export default function CommunicationScreen() {
           </TouchableOpacity>
           <View>
             <Text style={s.headerTitle}>Communication</Text>
-            <Text style={s.headerSub}>WhatsApp · SMS · Broadcast</Text>
+            <Text style={s.headerSub}>SMS · Broadcast</Text>
           </View>
         </View>
 
@@ -128,7 +127,7 @@ export default function CommunicationScreen() {
           {/* Channel */}
           <Text style={s.sectionLabel}>Channel</Text>
           <View style={s.channelRow}>
-            {(['whatsapp', 'sms'] as const).map((ch) => (
+            {(['sms'] as string[]).map((ch) => (
               <TouchableOpacity key={ch} style={[s.channelChip, channel === ch && s.channelChipActive]} onPress={() => setChannel(ch)} activeOpacity={0.8}>
                 <Ionicons name={ch === 'whatsapp' ? 'logo-whatsapp' : 'chatbubble-ellipses'} size={16} color={channel === ch ? C.white : C.textGray} />
                 <Text style={[s.channelChipText, channel === ch && { color: C.white }]}>{ch === 'whatsapp' ? 'WhatsApp' : 'SMS'}</Text>

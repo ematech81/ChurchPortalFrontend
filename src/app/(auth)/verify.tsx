@@ -53,11 +53,21 @@ export default function VerifyScreen() {
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
   const handleChange = (text: string, index: number) => {
-    const digit = text.replace(/[^0-9]/g, '').slice(-1);
+    // Branch-pastor codes arrive by SMS and are letters+digits (e.g. X4K9M2); email codes are digits.
+    const clean = text.replace(isPastor ? /[^A-Za-z0-9]/g : /[^0-9]/g, '').toUpperCase();
+    setError('');
+
+    // A whole code pasted into any box fills all of them.
+    if (clean.length === OTP_LENGTH) {
+      setDigits(clean.split(''));
+      inputs.current[OTP_LENGTH - 1]?.focus();
+      return;
+    }
+
+    const digit = clean.slice(-1);
     const next = [...digits];
     next[index] = digit;
     setDigits(next);
-    setError('');
     if (digit && index < OTP_LENGTH - 1) inputs.current[index + 1]?.focus();
   };
 
@@ -165,7 +175,7 @@ export default function VerifyScreen() {
             {isPastor
               ? (delivery === 'email'
                   ? "We've sent a 6-digit code to the email address on file for this number"
-                  : "We've sent a 6-digit code to your phone number")
+                  : "We've sent a 6-character code to your phone number")
               : "We've sent a 6-digit verification code to"}
           </Text>
           <Text style={s.identifierText}>{identifier}</Text>
@@ -196,8 +206,10 @@ export default function VerifyScreen() {
                 value={digit}
                 onChangeText={(t) => handleChange(t, i)}
                 onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, i)}
-                keyboardType="number-pad"
-                maxLength={1}
+                keyboardType={isPastor ? 'default' : 'number-pad'}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                maxLength={OTP_LENGTH}
                 selectTextOnFocus
                 editable={!expired}
               />
