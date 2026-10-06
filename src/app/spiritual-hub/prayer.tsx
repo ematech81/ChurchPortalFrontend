@@ -154,7 +154,7 @@ function SubmitModal({ visible, onClose }: { visible: boolean; onClose: () => vo
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <View style={sm.overlay}>
           <View style={sm.sheet}>
             <View style={sm.handle} />

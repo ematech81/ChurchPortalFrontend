@@ -39,6 +39,15 @@ export default function PinGate({ children, sectionLabel }: Props) {
   const appState = useRef<AppStateStatus>(AppState.currentState);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Each account has its own PIN. If the signed-in account changes, the gate locks again —
+  // a Branch Pastor must never inherit the Senior Pastor's unlocked state.
+  useEffect(() => {
+    setAuthorized(false);
+    setError(null);
+    setLockedUntil(null);
+    setResetKey((k) => k + 1);
+  }, [user?.id]);
+
   // Lock when app goes to background
   useEffect(() => {
     const sub = AppState.addEventListener('change', (next) => {

@@ -247,7 +247,7 @@ export default function CreateGroupScreen() {
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior="padding"
       >
       <ScrollView
         style={{ flex: 1, backgroundColor: C.bg }}

@@ -81,10 +81,11 @@ export default function CommunicationScreen() {
               memberIds: members.map((m) => m.id),
               body: message,
             });
-            const { sent, failed, skipped } = out.data;
+            const { sent, failed, skipped, firstError } = out.data;
             Alert.alert(
-              failed ? 'Partly sent' : 'Sent',
-              `Delivered to ${sent}. Skipped ${skipped} (no phone or opted out). Failed ${failed}.`,
+              failed ? (sent ? 'Partly sent' : 'Not sent') : 'Sent',
+              `Delivered to ${sent}. Skipped ${skipped} (no phone or opted out). Failed ${failed}.` +
+                (firstError ? `\n\nReason: ${firstError}` : ''),
             );
             setMessage('');
           } catch (e: any) {

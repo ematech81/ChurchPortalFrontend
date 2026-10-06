@@ -1,6 +1,6 @@
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ActivityIndicator, StatusBar, KeyboardAvoidingView, Platform,
+  ActivityIndicator, StatusBar, KeyboardAvoidingView, ScrollView,
 } from 'react-native';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -151,8 +151,13 @@ export default function VerifyScreen() {
         </View>
       </SafeAreaView>
 
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <View style={s.card}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+        <ScrollView
+          style={s.cardScroll}
+          contentContainerStyle={s.cardContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           {/* Icon */}
           <View style={s.iconWrap}>
             <Ionicons
@@ -256,7 +261,7 @@ export default function VerifyScreen() {
                 : 'Check your spam folder if you don\'t see the email.'}
             </Text>
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
@@ -266,7 +271,8 @@ const s = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
   backBtn: { padding: 4 },
   headerTitle: { fontSize: 18, fontWeight: '800', color: C.accent, letterSpacing: 1.5 },
-  card: { flex: 1, backgroundColor: '#F5F5FA', borderTopLeftRadius: 32, borderTopRightRadius: 32, paddingHorizontal: 28, paddingTop: 36, paddingBottom: 24 },
+  cardScroll: { flex: 1, backgroundColor: '#F5F5FA', borderTopLeftRadius: 32, borderTopRightRadius: 32 },
+  cardContent: { flexGrow: 1, paddingHorizontal: 28, paddingTop: 36, paddingBottom: 24 },
   iconWrap: { width: 80, height: 80, borderRadius: 40, backgroundColor: C.dark, alignItems: 'center', justifyContent: 'center', alignSelf: 'center', marginBottom: 16 },
   roleBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'center', backgroundColor: C.dark, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5, marginBottom: 12 },
   roleBadgeText: { fontSize: 10, fontWeight: '800', color: C.accent, letterSpacing: 1 },

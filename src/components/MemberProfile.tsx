@@ -60,6 +60,8 @@ interface Props {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const PASTOR_ROLES = ['senior_pastor', 'branch_pastor'];
+const FOLLOW_UP_TAG = 'Follow-Up Needed';
+const FLAG_REASONS = ['Backsliding', 'Missed several services', 'Needs counselling', 'Other'];
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   member:      { bg: '#DCFCE7', text: '#166534' },
@@ -169,6 +171,8 @@ export default function MemberProfile({ memberId }: Props) {
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [showFlagSheet, setShowFlagSheet] = useState(false);
+  const [flagging, setFlagging] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -212,6 +216,44 @@ export default function MemberProfile({ memberId }: Props) {
   // Real security is enforced by the backend DELETE endpoint (role + branch scope).
   const viewerRole = (viewer?.role ?? '').toLowerCase().trim();
   const showRemove = !!member && viewerRole === 'senior_pastor';
+
+  // Pastors and ministers are the shepherds: they are never flagged for follow-up or added to the workforce.
+  const isShepherd = !!member && (
+    member.status === 'pastor' || member.status === 'minister' ||
+    ['pastor', 'branch_pastor'].includes(member.churchRole ?? '')
+  );
+  const isInactive = !!member && ['deceased', 'transferred'].includes(member.status);
+  const canManage = !!member && [...PASTOR_ROLES, 'admin_pastor', 'super_admin'].includes(viewerRole) && !isShepherd && !isInactive;
+  const isFlagged = !!member?.tags?.includes(FOLLOW_UP_TAG);
+
+  const setFlag = async (flag: boolean, reason?: string) => {
+    setFlagging(true);
+    try {
+      await api.post(`/members/${memberId}/follow-up-flag`, { flag, reason });
+      setShowFlagSheet(false);
+      await load();
+      Alert.alert(
+        flag ? 'Flagged' : 'Flag removed',
+        flag ? `${member?.firstName} is now in the follow-up queue.` : `${member?.firstName} was removed from the follow-up queue.`,
+      );
+    } catch (err: any) {
+      const msg = err?.response?.data?.message;
+      Alert.alert('Could not update', Array.isArray(msg) ? msg[0] : (msg ?? 'Please try again.'));
+    } finally {
+      setFlagging(false);
+    }
+  };
+
+  const onFlagPress = () => {
+    if (isFlagged) {
+      Alert.alert('Remove follow-up flag', `Take ${member?.firstName} out of the follow-up queue?`, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Remove', onPress: () => setFlag(false) },
+      ]);
+    } else {
+      setShowFlagSheet(true);
+    }
+  };
 
   // ── Loading / Error states ─────────────────────────────────────────────────
 
@@ -308,6 +350,15 @@ export default function MemberProfile({ memberId }: Props) {
             </Text>
           </View>
 
+          {isFlagged && (
+            <View style={s.flaggedBadge}>
+              <Ionicons name="flag" size={12} color="#991B1B" />
+              <Text style={s.flaggedText}>
+                IN FOLLOW-UP QUEUE{member.customFields?.followUp?.reason ? ` · ${member.customFields.followUp.reason}` : ''}
+              </Text>
+            </View>
+          )}
+
           {member.churchRole && (
             <View style={s.rolePill}>
               <Ionicons name="ribbon-outline" size={12} color={C.accent} />
@@ -333,6 +384,33 @@ export default function MemberProfile({ memberId }: Props) {
               </TouchableOpacity>
             )}
           </View>
+
+          {canManage && (
+            <View style={s.manageRow}>
+              <TouchableOpacity
+                style={s.manageBtn}
+                activeOpacity={0.85}
+                onPress={() => router.push({
+                  pathname: '/members/workforce',
+                  params: { memberId, name: `${member.firstName} ${member.lastName}` },
+                } as any)}
+              >
+                <Ionicons name="construct" size={18} color={C.accent} />
+                <Text style={s.manageBtnText}>{member.status === 'worker' ? 'Add to another department' : 'Add to workforce'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.manageBtn, isFlagged ? s.manageBtnOutline : s.manageBtnDanger]}
+                activeOpacity={0.85}
+                onPress={onFlagPress}
+                disabled={flagging}
+              >
+                <Ionicons name={isFlagged ? 'flag-outline' : 'flag'} size={18} color={isFlagged ? C.dark : '#FFFFFF'} />
+                <Text style={[s.manageBtnText, { color: isFlagged ? C.dark : '#FFFFFF' }]}>
+                  {isFlagged ? 'Remove follow-up flag' : 'Flag for follow-up'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Personal */}
@@ -475,6 +553,25 @@ export default function MemberProfile({ memberId }: Props) {
         )}
       </ScrollView>
 
+      <Modal visible={showFlagSheet} transparent animationType="slide" onRequestClose={() => setShowFlagSheet(false)}>
+        <TouchableOpacity style={s.sheetOverlay} activeOpacity={1} onPress={() => setShowFlagSheet(false)}>
+          <View style={s.sheet}>
+            <Text style={s.sheetTitle}>Flag for follow-up</Text>
+            <Text style={s.sheetSub}>Why does {member?.firstName} need follow-up?</Text>
+            {FLAG_REASONS.map((r) => (
+              <TouchableOpacity key={r} style={s.sheetItem} disabled={flagging} onPress={() => setFlag(true, r)} activeOpacity={0.8}>
+                <Text style={s.sheetItemText}>{r}</Text>
+                <Ionicons name="chevron-forward" size={18} color={C.textGray} />
+              </TouchableOpacity>
+            ))}
+            {flagging && <ActivityIndicator color={C.accent} style={{ marginTop: 12 }} />}
+            <TouchableOpacity style={s.sheetCancel} onPress={() => setShowFlagSheet(false)}>
+              <Text style={s.sheetCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
       {member && (
         <RemoveModal
           member={member}
@@ -536,6 +633,33 @@ const s = StyleSheet.create({
   },
   actionBtnGreen: { backgroundColor: '#25D366' },
   actionBtnText: { fontSize: 13, fontWeight: '700', color: C.dark },
+
+  flaggedBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FEF2F2',
+    borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5, marginBottom: 14,
+  },
+  flaggedText: { fontSize: 11, fontWeight: '800', color: '#991B1B', letterSpacing: 0.3 },
+
+  manageRow: { flexDirection: 'column', gap: 10, alignSelf: 'stretch', marginTop: 14, paddingHorizontal: 16 },
+  manageBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: C.dark, borderRadius: 12, paddingVertical: 13,
+  },
+  manageBtnDanger: { backgroundColor: '#DC2626' },
+  manageBtnOutline: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: C.dark },
+  manageBtnText: { fontSize: 14, fontWeight: '800', color: C.accent },
+
+  sheetOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  sheet: { backgroundColor: C.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 32 },
+  sheetTitle: { fontSize: 18, fontWeight: '800', color: C.textDark },
+  sheetSub: { fontSize: 13, color: C.textGray, marginTop: 4, marginBottom: 12 },
+  sheetItem: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: C.border,
+  },
+  sheetItemText: { fontSize: 15, color: C.textDark, fontWeight: '600' },
+  sheetCancel: { alignItems: 'center', paddingVertical: 14, marginTop: 6 },
+  sheetCancelText: { fontSize: 15, fontWeight: '700', color: C.textGray },
 
   section: {
     backgroundColor: '#FFFFFF', marginHorizontal: 16, marginTop: 16,
