@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { api } from '../../services/api';
 import { C } from '../../constants/theme';
+import { YouthToggle } from '../../components/YouthToggle';
 
 // ── Option lists ──────────────────────────────────────────────────────────────
 
@@ -212,6 +213,7 @@ export default function EditMemberScreen() {
   const [address, setAddress] = useState('');
   const [occupation, setOccupation] = useState('');
   const [language, setLanguage] = useState('');
+  const [isYouth, setIsYouth] = useState(false);
   const [emergencyName, setEmergencyName] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
 
@@ -283,6 +285,7 @@ export default function EditMemberScreen() {
         setAgeRange(AGE_LABEL[m.ageRange] ?? '');
         setPickupAuth(m.pickupAuthorization ?? '');
         setTags(Array.isArray(m.tags) ? m.tags : []);
+        setIsYouth(!!m.isYouth);
         const fc: any[] = m.customFields?.familyCircle ?? [];
         setFamilyMembers(fc.map((f, i) => ({ id: `${i}`, name: f.name ?? '', phone: f.phone ?? '', relationship: f.relationship ?? '' })));
       } catch {
@@ -327,6 +330,7 @@ export default function EditMemberScreen() {
         departmentName: department || undefined,
         departmentRole: deptRole || undefined,
         tags,
+        isYouth,
         customFields: { familyCircle },
       };
 
@@ -449,6 +453,8 @@ export default function EditMemberScreen() {
             <PickerBtn value={language} placeholder="Select language" onPress={() => openPicker('Preferred Language', LANGUAGES, language, setLanguage)} />
           </Field>
         </View>
+
+        <YouthToggle value={isYouth} onChange={setIsYouth} />
 
         {/* SECTION 2: Emergency Contact */}
         <View style={s.card}>

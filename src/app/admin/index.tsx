@@ -68,6 +68,7 @@ const MODULE_DEFS: ModuleDef[] = [
   { id: 'workers',       title: 'Workers',            description: 'Track and manage active workers',       icon: 'construct',        color: '#F59E0B', route: null                                 },
   { id: 'attendance',    title: 'Attendance',         description: 'Service check-in and reports',          icon: 'checkbox',         color: '#10B981', route: '/attendance'                        },
   { id: 'events',        title: 'Event Registration', description: 'Shareable sign-up links and responses', icon: 'ticket',           color: '#F97316', route: '/event-registration'                },
+  { id: 'youth',         title: 'Youth',              description: 'Youth records and birthdays',           icon: 'sparkles',         color: '#C026D3', route: '/youth'                             },
   { id: 'export',        title: 'Export Members',     description: 'Download numbers and details',          icon: 'download',         color: '#0EA5E9', route: '/admin/export'                      },
   { id: 'followup',      title: 'Follow-Up',          description: 'Pastoral follow-up and tasks',          icon: 'trending-up',      color: '#EF4444', route: '/follow-up'                         },
   { id: 'finance',       title: 'Finance & Giving',   description: 'Tithes, offerings, statements',         icon: 'wallet',           color: '#22C55E', route: '/finance'                           },

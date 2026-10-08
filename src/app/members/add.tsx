@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { api } from '../../services/api';
 import { C } from '../../constants/theme';
+import { YouthToggle } from '../../components/YouthToggle';
 
 // ── Static option lists ───────────────────────────────────────────────────────
 
@@ -358,6 +359,7 @@ export default function AddMemberScreen() {
   const [address, setAddress] = useState('');
   const [occupation, setOccupation] = useState('');
   const [language, setLanguage] = useState('');
+  const [isYouth, setIsYouth] = useState(false);
   const [emergencyName, setEmergencyName] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
 
@@ -449,6 +451,7 @@ export default function AddMemberScreen() {
         departmentName: department || undefined,
         departmentRole: deptRole || undefined,
         tags,
+        isYouth,
         customFields: familyCircle.length > 0 ? { familyCircle } : undefined,
       };
 
@@ -575,6 +578,8 @@ export default function AddMemberScreen() {
             <PickerBtn value={language} placeholder="Select language" onPress={() => openPicker('Preferred Language', LANGUAGES, language, setLanguage)} />
           </Field>
         </View>
+
+        <YouthToggle value={isYouth} onChange={setIsYouth} />
 
         {/* ── SECTION 2: Emergency Contact ─────────────────────────────── */}
         <View style={s.card}>
