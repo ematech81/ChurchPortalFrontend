@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../../services/api';
 import { C } from '../../constants/theme';
+import { useAuthStore } from '../../stores/auth.store';
 
 interface MessageLog {
   id: string; channel: string; recipientPhone: string; body: string;
@@ -17,6 +18,7 @@ interface MessageLog {
 
 const AUDIENCE_OPTIONS = [
   { key: 'all',         label: 'All Members',       icon: 'people',          filter: {} },
+  { key: 'youth',       label: 'Youth',              icon: 'sparkles',        filter: { youthOnly: true } },
   { key: 'workers',     label: 'Workers Only',       icon: 'construct',       filter: { status: 'worker' } },
   { key: 'new_convert', label: 'New Converts',       icon: 'heart',           filter: { status: 'new_convert' } },
   { key: 'first_timer', label: 'First Timers',       icon: 'star',            filter: { status: 'first_timer' } },
@@ -37,6 +39,7 @@ function fmtTime(iso: string | null) {
 export default function CommunicationScreen() {
   const router = useRouter();
   const [tab, setTab] = useState<'compose' | 'history'>('compose');
+  const isSenior = ['senior_pastor', 'super_admin'].includes((useAuthStore((st) => st.user?.role) ?? '').toLowerCase());
   const [audience, setAudience] = useState('all');
   const [channel, setChannel] = useState<string>('sms') // SMS only for now (BulkSMS Nigeria has no WhatsApp channel);
   const [message, setMessage] = useState('');
@@ -70,21 +73,17 @@ export default function CommunicationScreen() {
         { text: 'Send', onPress: async () => {
           setSending(true);
           try {
-            // Recipients come from the audience filter (the server caps one send at 100 people).
-            const params: any = { limit: 100, ...ao?.filter };
-            const res = await api.get('/members', { params });
-            const members: Array<{ id: string }> = res.data;
-
-            if (members.length === 0) { Alert.alert('No recipients', 'No members match this audience.'); return; }
-
+            // The server picks the recipients from the audience (a Senior Pastor reaches every branch),
+            // texts a shared number once and fills in {name}.
             const out = await api.post('/messaging/send-bulk', {
-              memberIds: members.map((m) => m.id),
+              ...ao?.filter,
+              wholeOrg: isSenior || undefined,
               body: message,
             });
             const { sent, failed, skipped, firstError } = out.data;
             Alert.alert(
               failed ? (sent ? 'Partly sent' : 'Not sent') : 'Sent',
-              `Delivered to ${sent}. Skipped ${skipped} (no phone or opted out). Failed ${failed}.` +
+              `Accepted for ${sent}. Skipped ${skipped} (no phone, opted out or duplicate number). Failed ${failed}.` +
                 (firstError ? `\n\nReason: ${firstError}` : ''),
             );
             setMessage('');
