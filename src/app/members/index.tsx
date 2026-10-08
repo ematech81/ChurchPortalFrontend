@@ -299,9 +299,11 @@ export default function MembersScreen() {
             <Text style={s.headerTitle}>People & Membership</Text>
             <Text style={s.headerSub}>{total} total members</Text>
           </View>
-          <TouchableOpacity style={s.headerIconBtn}>
-            <Ionicons name="options-outline" size={22} color={C.white} />
-          </TouchableOpacity>
+          {(viewerRole === 'senior_pastor' || viewerRole === 'branch_pastor') && (
+            <TouchableOpacity style={s.headerIconBtn} onPress={() => router.push('/admin/export' as any)}>
+              <Ionicons name="download-outline" size={22} color={C.white} />
+            </TouchableOpacity>
+          )}
         </View>
       </SafeAreaView>
 
